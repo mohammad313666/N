@@ -527,18 +527,14 @@ if (String(body.taskId).startsWith('league_')) {
     if (task.id === 'daily') {
       if (u.lastDailyDate === dayKey()) return json(res, 400, { error:'Daily reward already claimed. Come back after 00:00 UTC.' });
       u.lastDailyDate = dayKey(); u.lastDailyAt = now();
-    } else if (task.id === 'telegram') {
-      // Local browser demo can test the task flow; real Telegram users must pass membership verification.
-      if (!identity.isLocalDemo) {
-        const member = await telegramMemberStatus(u.id);
-        if (member === false) return json(res, 400, { error:'We could not verify your channel membership. Join the channel and try again.' });
-        if (member === null) return json(res, 400, { error:'Telegram task verification is not configured yet. Set TELEGRAM_CHANNEL and add the bot to the channel.' });
-      }
-    } else if (['instagram','x','youtube'].includes(task.id)) {
-      return json(res, 503, { error:`${task.platform} follow verification is not configured. It must use the platform's official API/OAuth before any reward can be paid.` });
+    } 
+    } else if (['telegram', 'instagram', 'x', 'youtube'].includes(task.id)) {
+      // Social task claims are not verified against the platform.
+      // The server still enforces one claim per task per user.
     } else {
       return json(res, 400, { error:'Unknown task verification method.' });
     }
+
     u.completedTasks.push(task.id); u.coins += task.reward; grantLeagueRewards(u, u.coins); db.claims.push({ userId:u.id, taskId:task.id, at:now(), reward:task.reward }); saveDb(); return json(res, 200, { user:safeUser(u), gained:task.reward });
   }
   if (pathname === '/api/swap' && req.method === 'POST') {
