@@ -47,12 +47,103 @@ const AUTO_MULTIPLIERS = { 1: 5, 2: 7, 3: 10 };
 const DAILY_BOOST_USES = 3;
 const TURBO_MULTIPLIER = 10;
 const TURBO_DURATION_MS = 30 * 1000;
+
+
 const TASKS = [
-  { id: 'instagram', title: 'Follow NULL on Instagram', description: 'Open the official Instagram page, follow it, then claim your reward.', platform: 'Instagram', url: process.env.NULL_INSTAGRAM_URL || 'https://instagram.com/', reward: 100000, enabled: true },
-  { id: 'x', title: 'Follow NULL on X', description: 'Open the official X page, follow it, then claim your reward.', platform: 'X', url: process.env.NULL_X_URL || 'https://x.com/', reward: 100000, enabled: true },
-  { id: 'youtube', title: 'Subscribe to NULL on YouTube', description: 'Open the official YouTube channel, subscribe, then claim your reward.', platform: 'YouTube', url: process.env.NULL_YOUTUBE_URL || 'https://youtube.com/', reward: 100000, enabled: true },
-  { id: 'telegram', title: 'Join NULL Telegram channel', description: 'Open the official Telegram channel, join it, then claim your reward.', platform: 'Telegram', url: 'https://t.me/', reward: 100000, enabled: true },
-  { id: 'daily', title: 'Daily reward', description: 'Claim once per day. Resets at 00:00 UTC.', platform: 'Daily', url: '', reward: DAILY_TASK_REWARD, enabled: true }
+  {
+    id: 'instagram',
+    title: 'Follow NULL on Instagram',
+    description: 'Follow @nulltabbot, then claim your reward.',
+    platform: 'Instagram',
+    url: process.env.NULL_INSTAGRAM_URL || 'https://www.instagram.com/nulltabbot/',
+    reward: 100000,
+    enabled: true
+  },
+  {
+    id: 'x',
+    title: 'Follow NULL on X',
+    description: 'Follow @nulltabbot, then claim your reward.',
+    platform: 'X',
+    url: process.env.NULL_X_URL || 'https://x.com/nulltabbot',
+    reward: 100000,
+    enabled: true
+  },
+  {
+    id: 'youtube',
+    title: 'Subscribe to NULL on YouTube',
+    description: 'Subscribe to @nulltabbot, then claim your reward.',
+    platform: 'YouTube',
+    url: process.env.NULL_YOUTUBE_URL || 'https://www.youtube.com/@nulltabbot',
+    reward: 100000,
+    enabled: true
+  },
+  {
+    id: 'telegram',
+    title: 'Join NULL Telegram channel',
+    description: 'Join @nulltab, then claim your reward.',
+    platform: 'Telegram',
+    url: 'https://t.me/nulltab',
+    reward: 100000,
+    enabled: true
+  },
+  {
+    id: 'daily',
+    title: 'Daily reward',
+    description: 'Claim once per day. Resets at 00:00 UTC.',
+    platform: 'Daily',
+    url: '',
+    reward: DAILY_TASK_REWARD,
+    enabled: true
+  }
+];
+
+
+const LEAGUE_TASKS = [
+  {
+    id: 'league_bronze',
+    title: 'Reach Bronze League',
+    description: 'Claim your Bronze League reward.',
+    platform: 'League',
+    reward: 1000,
+    league: 'bronze',
+    enabled: true
+  },
+  {
+    id: 'league_silver',
+    title: 'Reach Silver League',
+    description: 'Claim your Silver League reward.',
+    platform: 'League',
+    reward: 10000,
+    league: 'silver',
+    enabled: true
+  },
+  {
+    id: 'league_gold',
+    title: 'Reach Gold League',
+    description: 'Claim your Gold League reward.',
+    platform: 'League',
+    reward: 100000,
+    league: 'gold',
+    enabled: true
+  },
+  {
+    id: 'league_crystal',
+    title: 'Reach Crystal League',
+    description: 'Claim your Crystal League reward.',
+    platform: 'League',
+    reward: 500000,
+    league: 'crystal',
+    enabled: true
+  },
+  {
+    id: 'league_legendary',
+    title: 'Reach Legendary League',
+    description: 'Claim your Legendary League reward.',
+    platform: 'League',
+    reward: 1000000,
+    league: 'legendary',
+    enabled: true
+  }
 ];
 
 function freshDb() { return { users: {}, referrals: [], tasks: TASKS, claims: [], squads: {}, miningPool: { mined: 0, cap: WNULL_POOL_CAP }, settings: { projectName: 'NULL', referralReward: REFERRAL_REWARD } }; }
