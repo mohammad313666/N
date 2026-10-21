@@ -12,3 +12,12 @@
 
 /* Shared WNull pool */
 .wnull-pool-card{margin-top:16px;padding:16px 14px;border:1px solid #38214d;border-radius:16px;background:linear-gradient(145deg,#100a17,#08060b);text-align:left;box-shadow:inset 0 1px 0 #ffffff08}.pool-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.pool-head h3{margin:5px 0 0;color:#e6ceff;font-size:17px}.pool-cap{font-size:10px;color:#c99aff;border:1px solid #54346f;border-radius:20px;padding:4px 7px;vertical-align:middle}.pool-glyph{width:38px;height:38px;border:1px solid #8e4be8;border-radius:12px;display:grid;place-items:center;color:#e8d5ff;background:#261338;font-size:20px;font-weight:900}.pool-numbers{margin:17px 0 10px;color:#f0e4ff;font-size:25px;font-weight:850;letter-spacing:-.5px;font-variant-numeric:tabular-nums}.pool-track{height:9px;background:#281833;border-radius:20px;overflow:hidden}.pool-track div{height:100%;width:0;background:linear-gradient(90deg,#8e4be8,#d8b6ff);border-radius:20px;transition:width .5s ease}.pool-foot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:9px;color:#9f8aa9;font-size:9px;letter-spacing:.3px}.pool-foot b{color:#d7b7ff}.pool-status{margin-top:12px;font-size:9px;letter-spacing:1.2px;color:#c99aff;font-weight:800}
+
+#coin,
+.coin,
+#tap-button,
+.tap-button {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
