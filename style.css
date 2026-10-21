@@ -21,3 +21,10 @@
   -webkit-user-select: none;
   user-select: none;
 }
+
+#coin-button {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
