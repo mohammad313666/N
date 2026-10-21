@@ -161,6 +161,21 @@ if (!Array.isArray(db.swaps)) db.swaps = [];
 for (const existingUser of Object.values(db.users || {})) { if (existingUser.squadId === undefined) existingUser.squadId = null; }
 // Keep known built-in task definitions up to date while preserving existing custom links/enabled flags.
 if (!Array.isArray(db.tasks)) db.tasks = [];
+
+for (const task of LEAGUE_TASKS) {
+  const existing = db.tasks.find(t => t.id === task.id);
+  if (!existing) {
+    db.tasks.push({ ...task });
+  } else {
+    existing.title = task.title;
+    existing.description = task.description;
+    existing.platform = task.platform;
+    existing.reward = task.reward;
+    existing.league = task.league;
+    existing.enabled = true;
+  }
+}
+
 for (const task of TASKS) {
   const existing = db.tasks.find(t => t.id === task.id);
   if (!existing) db.tasks.push({ ...task });
