@@ -479,60 +479,128 @@ async function handleApi(req, res, pathname) {
     else if (db.squads[oldId] && db.squads[oldId].ownerId === u.id) db.squads[oldId].ownerId = remaining[0].id;
     saveDb(); return json(res, 200, { user:safeUser(u), message:'You left the squad.' });
   }
-  if (pathname === '/api/task/claim' && req.method === 'POST') {
-    const task = db.tasks.find(t => t.id === String(body.taskId) && t.enabled);
-    
-if (String(body.taskId).startsWith('league_')) {
-  const league = LEAGUES.find(
-    item => `league_${item.id}` === String(body.taskId)
+
+  
+if (pathname === '/api/task/claim' && req.method === 'POST') {
+  const taskId = String(body.taskId || '');
+
+  // League rewards
+  if (taskId.startsWith('league_')) {
+    const league = LEAGUES.find(
+      item => `league_${item.id}` === taskId
+    );
+
+    if (!league) {
+      return json(res, 404, { error: 'League task not found.' });
+    }
+
+    if (Number(u.coins || 0) < league.min) {
+      return json(res, 400, {
+        error: 'You have not reached this league yet.'
+      });
+    }
+
+    if (!Array.isArray(u.claimedLeagueRewards)) {
+      u.claimedLeagueRewards = [];
+    }
+
+    if (u.claimedLeagueRewards.includes(league.id)) {
+      return json(res, 400, {
+        error: 'League reward already claimed.'
+      });
+    }
+
+    if (!Array.isArray(u.completedTasks)) {
+      u.completedTasks = [];
+    }
+
+    u.claimedLeagueRewards.push(league.id);
+    u.completedTasks.push(taskId);
+    u.coins = Number(u.coins || 0) + Number(league.reward || 0);
+
+    if (!Array.isArray(db.claims)) db.claims = [];
+    db.claims.push({
+      userId: u.id,
+      taskId,
+      at: now(),
+      reward: Number(league.reward || 0)
+    });
+
+    grantLeagueRewards(u, u.coins);
+    saveDb();
+
+    return json(res, 200, {
+      user: safeUser(u),
+      gained: Number(league.reward || 0)
+    });
+  }
+
+  // Regular tasks
+  const task = db.tasks.find(
+    t => t.id === taskId && t.enabled
   );
 
-  if (!league) {
-    return json(res, 404, { error: 'League task not found.' });
+  if (!task) {
+    return json(res, 404, { error: 'Task not found or disabled.' });
   }
 
-  if (u.coins < league.min) {
-    return json(res, 400, { error: 'You have not reached this league yet.' });
+  if (!Array.isArray(u.completedTasks)) {
+    u.completedTasks = [];
   }
 
-  if (!Array.isArray(u.claimedLeagueRewards)) {
-    u.claimedLeagueRewards = [];
+  if (task.id !== 'daily' && u.completedTasks.includes(task.id)) {
+    return json(res, 400, { error: 'Task already claimed.' });
   }
 
-  if (u.claimedLeagueRewards.includes(league.id)) {
-    return json(res, 400, { error: 'League reward already claimed.' });
+  if (task.id === 'daily') {
+    if (u.lastDailyDate === dayKey()) {
+      return json(res, 400, {
+        error: 'Daily reward already claimed. Come back after 00:00 UTC.'
+      });
+    }
+
+    u.lastDailyDate = dayKey();
+    u.lastDailyAt = now();
+  } else if (
+    ['telegram', 'instagram', 'x', 'youtube'].includes(task.id)
+  ) {
+    // Social tasks are claimable without external verification.
+  } else {
+    return json(res, 400, {
+      error: 'Unknown task verification method.'
+    });
   }
 
-  u.claimedLeagueRewards.push(league.id);
-  u.completedTasks.push(`league_${league.id}`);
-  u.coins += league.reward;
+  const reward = Number(task.reward || 0);
 
+  if (!Number.isFinite(reward) || reward < 0) {
+    return json(res, 400, { error: 'Invalid task reward.' });
+  }
+
+  if (task.id !== 'daily') {
+    u.completedTasks.push(task.id);
+  }
+
+  u.coins = Number(u.coins || 0) + reward;
+
+  if (!Array.isArray(db.claims)) db.claims = [];
   db.claims.push({
     userId: u.id,
-    taskId: `league_${league.id}`,
+    taskId: task.id,
     at: now(),
-    reward: league.reward
+    reward
   });
 
+  grantLeagueRewards(u, u.coins);
   saveDb();
 
   return json(res, 200, {
     user: safeUser(u),
-    gained: league.reward
+    gained: reward
   });
 }
 
-    if (!task) return json(res, 404, { error:'Task not found.' });
-    if (task.id !== 'daily' && u.completedTasks.includes(task.id)) return json(res, 400, { error:'Task already claimed.' });
-    if (task.id === 'daily') {
-      if (u.lastDailyDate === dayKey()) return json(res, 400, { error:'Daily reward already claimed. Come back after 00:00 UTC.' });
-      u.lastDailyDate = dayKey(); u.lastDailyAt = now();
-    } 
-    } 
-} else if (['telegram', 'instagram', 'x', 'youtube'].includes(task.id)) {
-  // Claim allowed without external verification.
-}
-
+  
   if (pathname === '/api/swap' && req.method === 'POST') {
     const amount = Number(body.amount);
     if (!Number.isFinite(amount) || amount < 1000000) return json(res, 400, { error:'Minimum swap is 1,000,000 WNull.' });
