@@ -528,12 +528,11 @@ if (String(body.taskId).startsWith('league_')) {
       if (u.lastDailyDate === dayKey()) return json(res, 400, { error:'Daily reward already claimed. Come back after 00:00 UTC.' });
       u.lastDailyDate = dayKey(); u.lastDailyAt = now();
     } 
-    } else if (['telegram', 'instagram', 'x', 'youtube'].includes(task.id)) {
-      // Social task claims are not verified against the platform.
-      // The server still enforces one claim per task per user.
-    } else {
-      return json(res, 400, { error:'Unknown task verification method.' });
-    }
+    } 
+} else if (['telegram', 'instagram', 'x', 'youtube'].includes(task.id)) {
+  // Claim allowed without external verification.
+}
+
   if (pathname === '/api/swap' && req.method === 'POST') {
     const amount = Number(body.amount);
     if (!Number.isFinite(amount) || amount < 1000000) return json(res, 400, { error:'Minimum swap is 1,000,000 WNull.' });
