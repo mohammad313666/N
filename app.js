@@ -137,7 +137,49 @@
   }
   function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
   async function act(url,body,success){if(busy)return;busy=true;try{const d=await api(url,body);if(d.user)state.user=d.user;await refresh();if(success)toast(success);else if(d.gained)toast(`+${fmt(d.gained)} NULL`);}catch(e){toast(e.message);await refresh();}finally{busy=false;}}
-  $('coin-button').addEventListener('pointerdown',e=>{e.preventDefault();if(busy||!state)return;const x=e.clientX,y=e.clientY;const f=document.createElement('div');f.className='tap-float';f.textContent=`+${state.user.tapPower * (state.user.turboUntil>Date.now()?10:1)}`;f.style.left=`${x-10}px`;f.style.top=`${y-15}px`;document.body.appendChild(f);setTimeout(()=>f.remove(),700);act('/api/tap',{taps:1});});
+  
+  const coinButton = $('coin-button');
+  const activePointers = new Set();
+  let pendingTaps = 0;
+  let tapFlushTimer = null;
+
+  coinButton.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    if (!state || state.user.energy <= 0) return;
+    if (activePointers.has(e.pointerId)) return;
+
+    activePointers.add(e.pointerId);
+
+    const x = e.clientX;
+    const y = e.clientY;
+    const f = document.createElement('div');
+    f.className = 'tap-float';
+    f.textContent = `+${state.user.tapPower * (state.user.turboUntil > Date.now() ? 10 : 1)}`;
+    f.style.left = `${x - 10}px`;
+    f.style.top = `${y - 15}px`;
+    document.body.appendChild(f);
+    setTimeout(() => f.remove(), 700);
+
+    pendingTaps = Math.min(20, pendingTaps + 1);
+
+    if (!tapFlushTimer) {
+      tapFlushTimer = setTimeout(async () => {
+        const taps = pendingTaps;
+        pendingTaps = 0;
+        tapFlushTimer = null;
+
+        if (taps > 0) {
+          await act('/api/tap', { taps });
+        }
+      }, 60);
+    }
+  });
+
+  const releasePointer = e => activePointers.delete(e.pointerId);
+  coinButton.addEventListener('pointerup', releasePointer);
+  coinButton.addEventListener('pointercancel', releasePointer);
+  coinButton.addEventListener('lostpointercapture', releasePointer);
+
   $('energy-boost').addEventListener('click',()=>act('/api/boost',{kind:'energy'},'Energy fully restored!'));
   $('turbo-boost').addEventListener('click',()=>act('/api/boost',{kind:'turbo'},'Turbo active: 10× tap rewards for 30 seconds!'));
   $('buy-tap').addEventListener('click',()=>act('/api/upgrade',{kind:'tap'},'Tap power upgraded!'));
