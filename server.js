@@ -281,6 +281,23 @@ function tickUser(u) {
     // Existing Auto Tap earns NULL. The same mining work also earns WNull from
     // the shared pool, but never beyond the global 5Qa cap.
     u.coins += earned;
+
+    
+const poolRemaining = Math.max(
+  0,
+  db.miningPool.cap - db.miningPool.mined
+);
+const poolGained = Math.min(earned, poolRemaining);
+db.miningPool.mined += poolGained;
+
+    
+const poolRemaining = Math.max(
+  0,
+  db.miningPool.cap - db.miningPool.mined
+);
+const poolGained = Math.min(gained, poolRemaining);
+db.miningPool.mined += poolGained;
+
     const poolRemaining = Math.max(0, WNULL_POOL_CAP - Number(db.miningPool.mined || 0));
     const wnullEarned = Math.min(earned, poolRemaining);
     if (wnullEarned > 0) {
