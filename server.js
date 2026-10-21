@@ -534,9 +534,6 @@ if (String(body.taskId).startsWith('league_')) {
     } else {
       return json(res, 400, { error:'Unknown task verification method.' });
     }
-
-    u.completedTasks.push(task.id); u.coins += task.reward; grantLeagueRewards(u, u.coins); db.claims.push({ userId:u.id, taskId:task.id, at:now(), reward:task.reward }); saveDb(); return json(res, 200, { user:safeUser(u), gained:task.reward });
-  }
   if (pathname === '/api/swap' && req.method === 'POST') {
     const amount = Number(body.amount);
     if (!Number.isFinite(amount) || amount < 1000000) return json(res, 400, { error:'Minimum swap is 1,000,000 WNull.' });
