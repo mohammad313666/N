@@ -397,10 +397,38 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   if (url.pathname === '/tonconnect-manifest.json') { const host = req.headers.host || 'localhost:3000'; const proto = String(req.headers['x-forwarded-proto'] || url.protocol.replace(':','') || 'https').split(',')[0].trim(); const base = `${proto}://${host}`; return json(res, 200, { url:base, name:'NullTap', iconUrl:`${base}/icon-180.png` }); }
   if (url.pathname.startsWith('/api/')) return handleApi(req, res, url.pathname).catch(e => { console.error(e); json(res, 500, { error:'Internal server error' }); });
-  let pathname = decodeURIComponent(url.pathname); if (pathname === '/') pathname = '/index.html';
-  const file = path.normalize(path.join(PUBLIC, pathname));
-  if (!file.startsWith(PUBLIC)) { res.writeHead(403); return res.end('Forbidden'); }
-  fs.readFile(file, (err, data) => { if (err) { res.writeHead(404); return res.end('Not found'); } res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' }); res.end(data); });
+  let pathname = decodeURIComponent(url.pathname);
+if (pathname === '/') pathname = '/index.html';
+
+const allowed = new Set([
+  '/index.html',
+  '/style.css',
+  '/app.js',
+  '/icon-180.png',
+  '/favicon.ico'
+]);
+
+if (!allowed.has(pathname)) {
+  res.writeHead(404);
+  return res.end('Not found');
+}
+
+const candidates = [
+  path.join(PUBLIC, pathname),
+  path.join(ROOT, pathname)
+];
+
+const file = candidates.find(
+  f => fs.existsSync(f) && fs.statSync(f).isFile()
+);
+
+if (!file) {
+  res.writeHead(404);
+  return res.end('Not found');
+}
+
+fs.readFile(file, (err, data) => 
+    { if (err) { res.writeHead(404); return res.end('Not found'); } res.writeHead(200, { 'Content-Type': MIME[path.extname(file)] || 'application/octet-stream' }); res.end(data); });
 });
 server.listen(PORT, () => console.log(`NULL Mini App running on port ${PORT}; SQLite: ${SQLITE_FILE}`));
 process.on('SIGTERM', () => { try { saveDb(); sql.close(); } finally { process.exit(0); } });
