@@ -201,6 +201,14 @@ function getLeague(coins) {
   return { ...league, next: LEAGUES[index + 1]?.min ?? null };
 }
 function grantLeagueRewards(u, eligibleCoins = u.coins) {
+  // League rewards are claimed manually from the Tasks page.
+  // Preserve previously paid rewards to prevent duplicate payouts.
+  if (!Array.isArray(u.claimedLeagueRewards)) {
+    u.claimedLeagueRewards = [];
+  }
+  return 0;
+}
+{
   if (!Array.isArray(u.claimedLeagueRewards)) u.claimedLeagueRewards = [];
   const eligible = Math.max(0, Number(eligibleCoins) || 0);
   let gained = 0;
@@ -456,6 +464,47 @@ async function handleApi(req, res, pathname) {
   }
   if (pathname === '/api/task/claim' && req.method === 'POST') {
     const task = db.tasks.find(t => t.id === String(body.taskId) && t.enabled);
+    
+if (String(body.taskId).startsWith('league_')) {
+  const league = LEAGUES.find(
+    item => `league_${item.id}` === String(body.taskId)
+  );
+
+  if (!league) {
+    return json(res, 404, { error: 'League task not found.' });
+  }
+
+  if (u.coins < league.min) {
+    return json(res, 400, { error: 'You have not reached this league yet.' });
+  }
+
+  if (!Array.isArray(u.claimedLeagueRewards)) {
+    u.claimedLeagueRewards = [];
+  }
+
+  if (u.claimedLeagueRewards.includes(league.id)) {
+    return json(res, 400, { error: 'League reward already claimed.' });
+  }
+
+  u.claimedLeagueRewards.push(league.id);
+  u.completedTasks.push(`league_${league.id}`);
+  u.coins += league.reward;
+
+  db.claims.push({
+    userId: u.id,
+    taskId: `league_${league.id}`,
+    at: now(),
+    reward: league.reward
+  });
+
+  saveDb();
+
+  return json(res, 200, {
+    user: safeUser(u),
+    gained: league.reward
+  });
+}
+
     if (!task) return json(res, 404, { error:'Task not found.' });
     if (task.id !== 'daily' && u.completedTasks.includes(task.id)) return json(res, 400, { error:'Task already claimed.' });
     if (task.id === 'daily') {
